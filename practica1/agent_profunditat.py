@@ -87,10 +87,7 @@ class Estat:
         self.__nom = "Miquel"
 
     def __hash__(self):
-        informacio = copy.deepcopy(self.__info)
-        informacio[ClauPercepcio.POSICIO] = informacio[ClauPercepcio.POSICIO][self.__nom]
-        informacio.pop(ClauPercepcio.PARETS)
-        return hash(tuple(informacio.items()))
+        return hash(self.__info[ClauPercepcio.POSICIO][self.__nom])
 
     def __getitem__(self, key):
         return self.__info[key]
@@ -101,11 +98,11 @@ class Estat:
     def __eq__(self, other):
         """Overrides the default implementation"""
         return (
-                self[ClauPercepcio.POSICIO] == other[ClauPercepcio.POSICIO]
+                self[ClauPercepcio.POSICIO][self.__nom] == other[ClauPercepcio.POSICIO][self.__nom]
         )
 
     def es_meta(self) -> bool:
-        return self[ClauPercepcio.POSICIO] == self[ClauPercepcio.OLOR]
+        return self[ClauPercepcio.POSICIO][self.__nom] == self[ClauPercepcio.OLOR]
 
     def genera_fill(self) -> list:
         estats_generats = []
@@ -113,8 +110,8 @@ class Estat:
         direccions = [Direccio.DRETA, Direccio.BAIX, Direccio.ESQUERRE, Direccio.DALT]
 
         accions = {
-            AccionsRana.MOURE: 1,
-            AccionsRana.BOTAR: 2
+            AccionsRana.BOTAR: 2,
+            AccionsRana.MOURE: 1
         }
 
         for accio, salts in accions.items():
@@ -130,9 +127,9 @@ class Estat:
                 nou_estat = copy.deepcopy(self)
 
                 if AccionsRana.BOTAR == accio:
-                    nou_estat.pare = (self, [(accio, direccio),
+                    nou_estat.pare = (self, [(AccionsRana.ESPERAR, direccio),
                                              (AccionsRana.ESPERAR, direccio),
-                                             (AccionsRana.ESPERAR, direccio)])
+                                             (accio, direccio)])
                 else:
                     nou_estat.pare = (self, [(accio, direccio)])
 
