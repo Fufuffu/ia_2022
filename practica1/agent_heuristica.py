@@ -157,7 +157,7 @@ class Estat:
 
     def calc_heuristica(self):
         pos = self[ClauPercepcio.POSICIO][self.__nom]
-        distancia = math.sqrt((pos[0]*pos[0]) + (pos[1]*pos[1]))
+        distancia = math.sqrt((pos[0]*pos[0])+(pos[1]*pos[1]))
         return distancia + self.__pes
 
     @property
