@@ -44,9 +44,7 @@ class Rana(joc.Rana):
 
             while iterador.pare is not None:
                 pare, accio = iterador.pare
-
-                for acc in accio:
-                    accions.append(acc)
+                accions.append(accio)
                 iterador = pare
             self.__accions = accions
             return True
@@ -63,7 +61,6 @@ class Rana(joc.Rana):
 
         if len(self.__accions) > 0:
             acc = self.__accions.pop()
-
             return acc[0], acc[1]
         else:
             return AccionsRana.ESPERAR
@@ -84,6 +81,8 @@ class Estat:
         self.__info = info
         self.__pare = pare
 
+        self.__bots_restants = 0
+        self.__dir_bot = None
         self.__nom = "Miquel"
 
     def __hash__(self):
@@ -104,14 +103,34 @@ class Estat:
     def es_meta(self) -> bool:
         return self[ClauPercepcio.POSICIO][self.__nom] == self[ClauPercepcio.OLOR]
 
+    def iniciar_bot(self, dir_bot):
+        self.__dir_bot = dir_bot
+        self.__bots_restants = 2
+
+    def fer_bot(self):
+        self.__bots_restants -= 1
+        return self.__dir_bot
+
+    def esta_botant(self) -> bool:
+        return self.__bots_restants > 0
+
     def genera_fill(self) -> list:
+        if self.esta_botant():
+            direccio = self.fer_bot()
+            if not self.esta_botant():
+                nou_estat = copy.deepcopy(self)
+                nou_estat.pare = (self, (AccionsRana.BOTAR, direccio))
+                return [nou_estat]
+            else:
+                nou_estat = copy.deepcopy(self)
+                nou_estat.pare = (self, (AccionsRana.ESPERAR, Direccio.DALT))
+                return [nou_estat]
+
         estats_generats = []
-
         direccions = [Direccio.DRETA, Direccio.BAIX, Direccio.ESQUERRE, Direccio.DALT]
-
         accions = {
-            AccionsRana.BOTAR: 2,
-            AccionsRana.MOURE: 1
+            AccionsRana.MOURE: 1,
+            AccionsRana.BOTAR: 2
         }
 
         for accio, salts in accions.items():
@@ -125,15 +144,12 @@ class Estat:
                     continue
 
                 nou_estat = copy.deepcopy(self)
-
-                if AccionsRana.BOTAR == accio:
-                    nou_estat.pare = (self, [(AccionsRana.ESPERAR, direccio),
-                                             (AccionsRana.ESPERAR, direccio),
-                                             (accio, direccio)])
+                if accio == AccionsRana.BOTAR:
+                    nou_estat.iniciar_bot(direccio)
+                    nou_estat.pare = (self, (AccionsRana.ESPERAR, direccio))
                 else:
-                    nou_estat.pare = (self, [(accio, direccio)])
-
-                nou_estat[ClauPercepcio.POSICIO][self.__nom] = nova_posicio
+                    nou_estat.pare = (self, (accio, direccio))
+                    nou_estat[ClauPercepcio.POSICIO][self.__nom] = nova_posicio
 
                 estats_generats.append(nou_estat)
 
