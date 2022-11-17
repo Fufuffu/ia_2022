@@ -19,7 +19,8 @@ class Rana(agent_lib.Agent):
     def __init__(self, nom: str, path_img: str = "../assets/rana/rana.png"):
         super().__init__(long_memoria=1)
 
-        posicio = random.randint(0, 7), random.randint(0, 7)
+        #posicio = random.randint(0, 7), random.randint(0, 7)
+        posicio = 3, 3
 
         while posicio in Laberint.PARETS or posicio in Rana.random__used:
             posicio = random.randint(0, 7), random.randint(0, 7)
@@ -136,7 +137,7 @@ class Laberint(joc.Joc):
         Direccio.DALT: (0, -1),
         Direccio.ESQUERRE: (-1, 0),
     }
-    PARETS = [(2, 4), (3, 4), (4, 4), (4, 3), (4, 2), (6, 6), (7, 6)]
+    PARETS = [(3, 4), (3, 2), (4, 3), (2, 3), (4, 2), (6, 6), (7, 6)]
 
     def __init__(self, agents: list[Rana], parets=False, mida_taulell: tuple[int, int] = (8, 8)):
         super(Laberint, self).__init__((800, 800), agents, title="Pràctica 1")

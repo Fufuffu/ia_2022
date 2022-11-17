@@ -36,6 +36,7 @@ class Rana(joc.Rana):
             actual = self.__oberts.get()
             actual = actual.estat
             if actual in self.__tancats:
+                print(f"Descartat {actual[ClauPercepcio.POSICIO]}, {actual._Estat__bots_restants}")
                 continue
 
             if actual.es_meta():
@@ -44,9 +45,11 @@ class Rana(joc.Rana):
             estats_fills = actual.genera_fill()
 
             for estat_f in estats_fills:
+                print(f"Added to oberts {estat_f[ClauPercepcio.POSICIO]}, {estat_f._Estat__bots_restants}")
                 self.__oberts.put(
                     PrioritizedItem(estat_f.calc_heuristica(), estat_f))
 
+            print(f"Added to tancats {actual[ClauPercepcio.POSICIO]}, {actual._Estat__bots_restants}")
             self.__tancats.add(actual)
 
         if actual.es_meta():
@@ -111,7 +114,8 @@ class Estat:
     def __eq__(self, other):
         """Overrides the default implementation"""
         return (
-                self[ClauPercepcio.POSICIO][self.__nom] == other[ClauPercepcio.POSICIO][self.__nom]
+                self[ClauPercepcio.POSICIO][self.__nom] == other[ClauPercepcio.POSICIO][self.__nom] and
+                self.__bots_restants == other.__bots_restants
         )
 
     def es_meta(self) -> bool:
@@ -121,17 +125,17 @@ class Estat:
         self.__dir_bot = dir_bot
         self.__bots_restants = 2
 
-    def fer_bot(self):
+    def seguir_bot(self):
         self.__bots_restants -= 1
         return self.__dir_bot
 
-    def esta_botant(self) -> bool:
+    def botant(self) -> bool:
         return self.__bots_restants > 0
 
     def genera_fill(self) -> list:
-        if self.esta_botant():
-            direccio = self.fer_bot()
-            if not self.esta_botant():
+        if self.botant():
+            direccio = self.seguir_bot()
+            if not self.botant():
                 nou_estat = copy.deepcopy(self)
                 nou_estat.pare = (self, (AccionsRana.BOTAR, direccio))
                 nou_estat.pes = self.__pes + 6
