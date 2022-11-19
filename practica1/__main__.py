@@ -1,10 +1,9 @@
-from practica1 import agent_minimax, joc
+from practica1 import agent_genetic, joc
 
 
 def main():
-    rana = agent_minimax.Rana("Miquel")
-    rana2 = agent_minimax.Rana("Tomeu")
-    lab = joc.Laberint([rana, rana2], parets=True)
+    rana = agent_genetic.Rana("Miquel")
+    lab = joc.Laberint([rana], parets=True)
     lab.comencar()
 
 
