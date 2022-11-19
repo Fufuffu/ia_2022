@@ -11,7 +11,7 @@ from typing import Any
 @dataclass(order=True)
 class PrioritizedItem:
     priority: int
-    item: Any = field(compare=False)
+    estat: Any = field(compare=False)
 
 
 class Rana(joc.Rana):
@@ -34,7 +34,7 @@ class Rana(joc.Rana):
         actual = None
         while not self.__oberts.empty():
             actual = self.__oberts.get()
-            actual = actual.item
+            actual = actual.estat
             if actual in self.__tancats:
                 continue
 
