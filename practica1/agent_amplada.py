@@ -1,10 +1,8 @@
 import copy
-from queue import PriorityQueue
 
 from ia_2022 import entorn
 from practica1 import joc
 from practica1.entorn import AccionsRana, Direccio, ClauPercepcio
-from dataclasses import dataclass, field
 
 
 class Estat:
@@ -21,7 +19,6 @@ class Estat:
 
         self.__info = info
         self.__pare = pare
-        self.__pes = 0
 
         self.__bots_restants = 0
         self.__nom = "Miquel"
@@ -64,12 +61,10 @@ class Estat:
             if not self.botant():
                 nou_estat = copy.deepcopy(self)
                 nou_estat.pare = (self, (AccionsRana.ESPERAR, Direccio.ESQUERRE))
-                nou_estat.pes = self.__pes + 0.5
                 return [nou_estat]
             else:
                 nou_estat = copy.deepcopy(self)
                 nou_estat.pare = (self, (AccionsRana.ESPERAR, Direccio.DALT))
-                nou_estat.pes = self.__pes + 0.5
                 return [nou_estat]
 
         estats_generats = []
@@ -85,7 +80,6 @@ class Estat:
 
             nou_estat = copy.deepcopy(self)
             nou_estat.pare = (self, (AccionsRana.MOURE, direccio))
-            nou_estat.pes = self.__pes + 1
             nou_estat[ClauPercepcio.POSICIO][self.__nom] = nova_posicio
             estats_generats.append(nou_estat)
 
@@ -100,23 +94,15 @@ class Estat:
             nou_estat = copy.deepcopy(self)
             nou_estat.iniciar_bot()
             nou_estat.pare = (self, (AccionsRana.BOTAR, direccio))
-            nou_estat.pes = self.__pes + 6
             nou_estat[ClauPercepcio.POSICIO][self.__nom] = nova_posicio
             estats_generats.append(nou_estat)
 
         # Esperar
         nou_estat = copy.deepcopy(self)
         nou_estat.pare = (self, (AccionsRana.ESPERAR, Direccio.BAIX))
-        nou_estat.pes = self.__pes + 0.5
         estats_generats.append(nou_estat)
 
         return estats_generats
-
-    def calc_heuristica(self) -> float:
-        pos = self[ClauPercepcio.POSICIO][self.__nom]
-        pizza = self[ClauPercepcio.OLOR]
-        distancia = abs(pizza[0] - pos[0]) + abs(pizza[1] - pos[1])
-        return distancia + self.pes
 
     @property
     def pare(self):
@@ -126,25 +112,11 @@ class Estat:
     def pare(self, value):
         self.__pare = value
 
-    @property
-    def pes(self):
-        return self.__pes
-
-    @pes.setter
-    def pes(self, value):
-        self.__pes = value
-
     @staticmethod
     def _calcula_casella(posicio: tuple[int, int], dir: Direccio, magnitut: int = 1):
         mov = Estat.MOVS[dir]
 
         return posicio[0] + (mov[0] * magnitut), posicio[1] + (mov[1] * magnitut)
-
-
-@dataclass(order=True)
-class PrioritizedItem:
-    prioritat: int
-    estat: Estat = field(compare=False)
 
 
 class Rana(joc.Rana):
@@ -157,28 +129,26 @@ class Rana(joc.Rana):
     def pinta(self, display):
         pass
 
-    def _cerca(self, estat) -> bool:
-        self.__oberts = PriorityQueue()
+    def _cerca(self, estat):
+        self.__oberts = []
         self.__tancats = set()
 
-        self.__oberts.put(
-            PrioritizedItem(estat.calc_heuristica(), estat))
+        self.__oberts.append(estat)
 
         actual = None
-        while not self.__oberts.empty():
-            actual = self.__oberts.get()
-            actual = actual.estat
+        while len(self.__oberts) > 0:
+            actual = self.__oberts[0]
+            self.__oberts = self.__oberts[1:]
             if actual in self.__tancats:
                 continue
+
+            estats_fills = actual.genera_fill()
 
             if actual.es_meta():
                 break
 
-            estats_fills = actual.genera_fill()
-
             for estat_f in estats_fills:
-                self.__oberts.put(
-                    PrioritizedItem(estat_f.calc_heuristica(), estat_f))
+                self.__oberts.append(estat_f)
 
             self.__tancats.add(actual)
 
@@ -188,7 +158,6 @@ class Rana(joc.Rana):
 
             while iterador.pare is not None:
                 pare, accio = iterador.pare
-
                 accions.append(accio)
                 iterador = pare
             self.__accions = accions
@@ -206,7 +175,6 @@ class Rana(joc.Rana):
 
         if len(self.__accions) > 0:
             acc = self.__accions.pop()
-
             return acc[0], acc[1]
         else:
             return AccionsRana.ESPERAR
