@@ -1,8 +1,8 @@
-from practica1 import agent_genetic, joc
+from practica1 import agent_amplada, joc
 
 
 def main():
-    rana = agent_genetic.Rana("Miquel")
+    rana = agent_amplada.Rana("Miquel")
     lab = joc.Laberint([rana], parets=True)
     lab.comencar()
 

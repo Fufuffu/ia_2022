@@ -62,6 +62,12 @@ class Estat:
         return self[ClauPercepcio.POSICIO][nom] == self[ClauPercepcio.OLOR] or \
                self[ClauPercepcio.POSICIO][self.nom_altre(nom)] == self[ClauPercepcio.OLOR]
 
+    def no_es_segur(self, pos: tuple[int, int], nom: str) -> bool:
+        return pos in self[ClauPercepcio.PARETS] or \
+               pos == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or \
+               (pos[0] > 7 or pos[0] < 0) or \
+               (pos[1] > 7 or pos[1] < 0)
+
     def genera_fill(self, nom: str) -> list:
         estats_generats = []
 
@@ -72,10 +78,7 @@ class Estat:
             nova_posicio = self._calcula_casella(
                 posicio=self[ClauPercepcio.POSICIO][nom], dir=direccio, magnitut=1)
 
-            if nova_posicio in self[ClauPercepcio.PARETS] or \
-                    nova_posicio == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or \
-                    (nova_posicio[0] > 7 or nova_posicio[0] < 0) or \
-                    (nova_posicio[1] > 7 or nova_posicio[1] < 0):
+            if self.no_es_segur(nova_posicio, nom):
                 continue
 
             nou_estat = copy.deepcopy(self)
@@ -88,10 +91,7 @@ class Estat:
             nova_posicio = self._calcula_casella(
                 posicio=self[ClauPercepcio.POSICIO][nom], dir=direccio, magnitut=2)
 
-            if nova_posicio in self[ClauPercepcio.PARETS] or \
-                    nova_posicio == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or \
-                    (nova_posicio[0] > 7 or nova_posicio[0] < 0) or \
-                    (nova_posicio[1] > 7 or nova_posicio[1] < 0):
+            if self.no_es_segur(nova_posicio, nom):
                 continue
 
             nou_estat = copy.deepcopy(self)
