@@ -1,7 +1,10 @@
 import copy
 import itertools
 import random
+import tracemalloc
 from queue import PriorityQueue
+
+from stopwatch import Stopwatch
 
 from ia_2022 import entorn
 from practica1 import joc
@@ -140,7 +143,16 @@ class Rana(joc.Rana):
             self, percep: entorn.Percepcio
     ) -> entorn.Accio | tuple[entorn.Accio, object]:
         if self.__accions is None:
+            stopwatch = Stopwatch()
+            stopwatch.start()
             self._genetic(percep)
+            stopwatch.stop()
+            print(stopwatch.report())
+
+            tracemalloc.start()
+            self._genetic(percep)
+            print("Memory (B)", tracemalloc.get_traced_memory())
+            tracemalloc.stop()
 
         if len(self.__accions) > 0:
             acc = self.__accions.pop()

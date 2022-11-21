@@ -1,4 +1,7 @@
 import copy
+import tracemalloc
+
+from stopwatch import Stopwatch
 
 from ia_2022 import entorn
 from practica1 import joc
@@ -181,7 +184,16 @@ class Rana(joc.Rana):
     ) -> entorn.Accio | tuple[entorn.Accio, object]:
         estat_inicial = Estat(self.nom, percep.to_dict())
         if self.__accions is None:
+            stopwatch = Stopwatch()
+            stopwatch.start()
             self._cerca(estat=estat_inicial)
+            stopwatch.stop()
+            print(stopwatch.report())
+
+            tracemalloc.start()
+            self._cerca(estat=estat_inicial)
+            print("Memory (B)", tracemalloc.get_traced_memory())
+            tracemalloc.stop()
 
         if len(self.__accions) > 0:
             acc = self.__accions.pop()

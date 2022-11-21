@@ -24,6 +24,8 @@ class Rana(agent_lib.Agent):
         while posicio in Laberint.PARETS or posicio in Rana.random__used:
             posicio = random.randint(0, 7), random.randint(0, 7)
 
+        posicio = (0, 0)
+
         Rana.random__used.add(posicio)
         self.__posicio = posicio
         self.__botant = 0
@@ -174,6 +176,9 @@ class Laberint(joc.Joc):
 
         while not self.__caselles[pos_x][pos_y].is_lliure():
             pos_x, pos_y = random.randint(0, 7), random.randint(0, 7)
+
+        pos_x = 7
+        pos_y = 7
 
         self.__caselles[pos_x][pos_y].push_menjar()
 

@@ -1,5 +1,8 @@
 import copy
+import tracemalloc
 from dataclasses import dataclass
+
+from stopwatch import Stopwatch
 
 from ia_2022 import entorn
 from practica1 import joc
@@ -64,12 +67,11 @@ class Estat:
         return self[ClauPercepcio.POSICIO][nom] == self[ClauPercepcio.OLOR] or \
                self[ClauPercepcio.POSICIO][self.nom_altre(nom)] == self[ClauPercepcio.OLOR]
 
-    def no_es_segur(self, pos: tuple[int, int], nom: str) -> bool:
+    def no_es_segur(self, pos: tuple[int, int]) -> bool:
         mida_taulell = self[ClauPercepcio.MIDA_TAULELL]
 
         return (
                 pos in self[ClauPercepcio.PARETS] or
-                pos == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or
                 (pos[0] > mida_taulell[0] - 1 or pos[0] < 0) or
                 (pos[1] > mida_taulell[1] - 1 or pos[1] < 0)
         )
@@ -84,7 +86,7 @@ class Estat:
             nova_posicio = self._calcula_casella(
                 posicio=self[ClauPercepcio.POSICIO][nom], dir=direccio, magnitut=1)
 
-            if self.no_es_segur(nova_posicio, nom):
+            if self.no_es_segur(nova_posicio):
                 continue
 
             nou_estat = copy.deepcopy(self)
@@ -97,7 +99,7 @@ class Estat:
             nova_posicio = self._calcula_casella(
                 posicio=self[ClauPercepcio.POSICIO][nom], dir=direccio, magnitut=2)
 
-            if self.no_es_segur(nova_posicio, nom):
+            if self.no_es_segur(nova_posicio):
                 continue
 
             nou_estat = copy.deepcopy(self)
@@ -201,7 +203,16 @@ class Rana(joc.Rana):
             estat_inicial = Estat(self.__nom_altre, self.nom, percep.to_dict())
 
         if len(self.__accions) == 0:
+            stopwatch = Stopwatch()
+            stopwatch.start()
             self.cerca_moviment(estat_inicial)
+            stopwatch.stop()
+            print(stopwatch.report())
+
+            tracemalloc.start()
+            self.cerca_moviment(estat_inicial)
+            print("Memory (B)", tracemalloc.get_traced_memory())
+            tracemalloc.stop()
 
         if len(self.__accions) > 0:
             accio, direccio = self.__accions.pop()
