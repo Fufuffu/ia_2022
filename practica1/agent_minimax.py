@@ -69,7 +69,6 @@ class Estat:
 
         return (
                 pos in self[ClauPercepcio.PARETS] or
-                pos == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or
                 (pos[0] > mida_taulell[0] - 1 or pos[0] < 0) or
                 (pos[1] > mida_taulell[1] - 1 or pos[1] < 0)
         )
