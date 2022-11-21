@@ -13,15 +13,16 @@ class Estat:
         Direccio.ESQUERRE: (-1, 0),
     }
 
-    def __init__(self, info: dict = None, pare=None):
+    def __init__(self, nom_agent: str, info: dict = None, pare=None):
         if info is None:
             info = {}
 
         self.__info = info
         self.__pare = pare
 
+        self.__dir_bot = None
         self.__bots_restants = 0
-        self.__nom = "Miquel"
+        self.__nom = nom_agent
 
     def __hash__(self):
         return hash(tuple(self.__info))
@@ -36,31 +37,41 @@ class Estat:
         if self.__pare and other.pare:
             return self.__info == other.__info and self.__pare[1] == other.pare[1]
         else:
-            return self.__info == other.__info
+            return self.__info == other.__info and self.__bots_restants == other.__bots_restants
 
     def es_meta(self) -> bool:
         return self[ClauPercepcio.POSICIO][self.__nom] == self[ClauPercepcio.OLOR]
 
-    def iniciar_bot(self):
+    def iniciar_bot(self, direccio: Direccio):
+        self.__dir_bot = direccio
         self.__bots_restants = 2
 
     def seguir_bot(self):
         self.__bots_restants -= 1
+        return self.__dir_bot
 
     def botant(self) -> bool:
         return self.__bots_restants > 0
 
     def no_es_segur(self, pos: tuple[int, int]) -> bool:
-        return pos in self[ClauPercepcio.PARETS] or \
-               (pos[0] > 7 or pos[0] < 0) or \
-               (pos[1] > 7 or pos[1] < 0)
+        mida_taulell = self[ClauPercepcio.MIDA_TAULELL]
+
+        return (
+                pos in self[ClauPercepcio.PARETS] or
+                (pos[0] > mida_taulell[0] - 1 or pos[0] < 0) or
+                (pos[1] > mida_taulell[1] - 1 or pos[1] < 0)
+        )
 
     def genera_fill(self) -> list:
         if self.botant():
-            self.seguir_bot()
+            direccio = self.seguir_bot()
+            # Si ha acabat el bot, podem generar la posició final del bot
             if not self.botant():
                 nou_estat = copy.deepcopy(self)
                 nou_estat.pare = (self, (AccionsRana.ESPERAR, Direccio.ESQUERRE))
+                nova_posicio = self._calcula_casella(
+                    posicio=self[ClauPercepcio.POSICIO][self.__nom], dir=direccio, magnitut=2)
+                nou_estat[ClauPercepcio.POSICIO][self.__nom] = nova_posicio
                 return [nou_estat]
             else:
                 nou_estat = copy.deepcopy(self)
@@ -91,10 +102,10 @@ class Estat:
             if self.no_es_segur(nova_posicio):
                 continue
 
+            # No actualizam la posició, serà modificada en la darrera espera
             nou_estat = copy.deepcopy(self)
-            nou_estat.iniciar_bot()
+            nou_estat.iniciar_bot(direccio)
             nou_estat.pare = (self, (AccionsRana.BOTAR, direccio))
-            nou_estat[ClauPercepcio.POSICIO][self.__nom] = nova_posicio
             estats_generats.append(nou_estat)
 
         # Esperar
@@ -168,8 +179,7 @@ class Rana(joc.Rana):
     def actua(
             self, percep: entorn.Percepcio
     ) -> entorn.Accio | tuple[entorn.Accio, object]:
-        estat_inicial = Estat(percep.to_dict())
-
+        estat_inicial = Estat(self.nom, percep.to_dict())
         if self.__accions is None:
             self._cerca(estat=estat_inicial)
 

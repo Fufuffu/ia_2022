@@ -16,12 +16,15 @@ class Estat:
         Direccio.ESQUERRE: (-1, 0),
     }
 
-    def __init__(self, info: dict = None, pare=None):
+    def __init__(self, nom_max: str, nom_min: str, info: dict = None, pare=None):
         if info is None:
             info = {}
 
         self.__info = info
         self.__pare = pare
+
+        self.__nom_max = nom_max
+        self.__nom_min = nom_min
 
     def __hash__(self):
         return hash(tuple(self.__info))
@@ -35,11 +38,10 @@ class Estat:
     def __eq__(self, other):
         return self.__info == other.__info
 
-    @staticmethod
-    def nom_altre(nom: str) -> str:
-        if nom == "Miquel":
-            return "Tomeu"
-        return "Miquel"
+    def nom_altre(self, nom: str) -> str:
+        if nom == self.__nom_max:
+            return self.__nom_min
+        return self.__nom_max
 
     def manhattan(self, nom: str) -> int:
         pos = self[ClauPercepcio.POSICIO][nom]
@@ -63,10 +65,14 @@ class Estat:
                self[ClauPercepcio.POSICIO][self.nom_altre(nom)] == self[ClauPercepcio.OLOR]
 
     def no_es_segur(self, pos: tuple[int, int], nom: str) -> bool:
-        return pos in self[ClauPercepcio.PARETS] or \
-               pos == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or \
-               (pos[0] > 7 or pos[0] < 0) or \
-               (pos[1] > 7 or pos[1] < 0)
+        mida_taulell = self[ClauPercepcio.MIDA_TAULELL]
+
+        return (
+                pos in self[ClauPercepcio.PARETS] or
+                pos == self[ClauPercepcio.POSICIO][self.nom_altre(nom)] or
+                (pos[0] > mida_taulell[0] - 1 or pos[0] < 0) or
+                (pos[1] > mida_taulell[1] - 1 or pos[1] < 0)
+        )
 
     def genera_fill(self, nom: str) -> list:
         estats_generats = []
@@ -136,10 +142,10 @@ class EstatPuntuacio:
 class Rana(joc.Rana):
     def __init__(self, *args, **kwargs):
         super(Rana, self).__init__(args[0])
-        self.__nom = args[0]
         self.__accions = []
 
-        self.__es_max = True if self.__nom == "Miquel" else False
+        self.__es_max = None
+        self.__nom_altre = None
 
     def pinta(self, display):
         pass
@@ -162,7 +168,7 @@ class Rana(joc.Rana):
             return min(puntuacio_fills)
 
     def cerca_moviment(self, estat_inicial: Estat):
-        resultat = self.minimax(estat_inicial, 0, self.__es_max, self.__nom)
+        resultat = self.minimax(estat_inicial, 0, self.__es_max, self.nom)
 
         if resultat.estat.pare is not None:
             accio_final = resultat.estat.pare[1]
@@ -174,10 +180,25 @@ class Rana(joc.Rana):
             self.__accions.append((AccionsRana.ESPERAR, Direccio.ESQUERRE))
         self.__accions.append(accio_final)
 
+    def get_nom_agents(self, percep: entorn.Percepcio):
+        noms_agents = list(percep[ClauPercepcio.POSICIO].keys())
+        if self.nom == noms_agents[0]:
+            self.__es_max = True
+            self.__nom_altre = noms_agents[1]
+        else:
+            self.__es_max = False
+            self.__nom_altre = noms_agents[0]
+
     def actua(
             self, percep: entorn.Percepcio
     ) -> entorn.Accio | tuple[entorn.Accio, object]:
-        estat_inicial = Estat(percep.to_dict())
+        # Obtenim els noms dels agents, el primer serà max
+        self.get_nom_agents(percep)
+
+        if self.__es_max:
+            estat_inicial = Estat(self.nom, self.__nom_altre, percep.to_dict())
+        else:
+            estat_inicial = Estat(self.__nom_altre, self.nom, percep.to_dict())
 
         if len(self.__accions) == 0:
             self.cerca_moviment(estat_inicial)

@@ -26,7 +26,7 @@ class Rana(joc.Rana):
     def pinta(self, display):
         pass
 
-    def _genetic(self, percep):
+    def _genetic(self, percep: entorn.Percepcio):
         # Genetic pool
         direccions = [Direccio.DRETA, Direccio.BAIX, Direccio.ESQUERRE, Direccio.DALT]
 
@@ -41,19 +41,18 @@ class Rana(joc.Rana):
         while len(poblacio) < self.MAX_POBLACIO:
             ind = Individu()
             ind.genera_individu(genetic_pool)
-            if ind.es_segur(percep[ClauPercepcio.POSICIO]['Miquel'], percep[ClauPercepcio.PARETS],
+            if ind.es_segur(percep[ClauPercepcio.POSICIO][self.nom], percep[ClauPercepcio.PARETS],
                             percep[ClauPercepcio.MIDA_TAULELL], percep[ClauPercepcio.OLOR]):
                 poblacio.append(ind)
 
-        print(percep[ClauPercepcio.POSICIO]['Miquel'])
-        print(percep[ClauPercepcio.OLOR])
         """SELECTION"""
         end = False
-        iteraciones = 0
+        ind_sol = None
+        iteracions = 0
         while not end:
             cua_fitness = PriorityQueue()
             for i in poblacio:
-                if i.es_meta(percep[ClauPercepcio.POSICIO]['Miquel'], percep[ClauPercepcio.PARETS],
+                if i.es_meta(percep[ClauPercepcio.POSICIO][self.nom], percep[ClauPercepcio.PARETS],
                              percep[ClauPercepcio.MIDA_TAULELL], percep[ClauPercepcio.OLOR]):
                     end = True
                     ind_sol = i
@@ -80,47 +79,36 @@ class Rana(joc.Rana):
                     index_cross = random.randint(0, len(ind1.info()) - 1)
 
                 # Crossover
-                print("CRUCE ---------------------")
-                print(index_cross)
-                print(ind1.info())
-                print(ind2.info())
-                print(ind1.info()[:index_cross])
-                print(ind2.info()[index_cross:])
-
                 fill1_info = ind1.info()[:index_cross] + ind2.info()[index_cross:]
                 fill2_info = ind2.info()[:index_cross] + ind1.info()[index_cross:]
-                print(fill1_info)
-                print(fill2_info)
 
                 """MUTACIÓ"""
                 # Probabilitat de un deu percent de mutació
-                if iteraciones > 100:
+                if iteracions > 100:
                     probabilitat = 1
                 else:
                     probabilitat = random.randint(1, 10)
                 if probabilitat == 1:
                     fill1_info.append(random.choice(genetic_pool))
-                    print("MUTACION _____________________________")
 
-                if iteraciones > 100:
+                if iteracions > 100:
                     probabilitat = 1
                 else:
                     probabilitat = random.randint(1, 10)
                 if probabilitat == 1:
                     fill2_info.append(random.choice(genetic_pool))
-                    print("MUTACION ---------------------------")
 
                 # Creació fills i veure si son segurs
                 fill1 = Individu()
                 fill1.set_info(fill1_info)
-                if fill1.es_segur(percep[ClauPercepcio.POSICIO]['Miquel'], percep[ClauPercepcio.PARETS],
+                if fill1.es_segur(percep[ClauPercepcio.POSICIO][self.nom], percep[ClauPercepcio.PARETS],
                                   percep[ClauPercepcio.MIDA_TAULELL], percep[ClauPercepcio.OLOR]):
                     cua_fitness.put(
                         PrioritizedItem(fill1.fitness(), fill1))
 
                 fill2 = Individu()
                 fill2.set_info(fill2_info)
-                if fill2.es_segur(percep[ClauPercepcio.POSICIO]['Miquel'], percep[ClauPercepcio.PARETS],
+                if fill2.es_segur(percep[ClauPercepcio.POSICIO][self.nom], percep[ClauPercepcio.PARETS],
                                   percep[ClauPercepcio.MIDA_TAULELL], percep[ClauPercepcio.OLOR]):
                     cua_fitness.put(
                         PrioritizedItem(fill2.fitness(), fill2))
@@ -132,8 +120,7 @@ class Rana(joc.Rana):
                     ind_aux = ind_aux.item
                     poblacio.append(ind_aux)
 
-            print(iteraciones)
-            iteraciones += 1
+            iteracions += 1
 
         accions = []
         for i in ind_sol.info():
@@ -145,10 +132,13 @@ class Rana(joc.Rana):
         self.__accions = accions
         return True
 
+    @staticmethod
+    def agafa_nom(percep: entorn.Percepcio):
+        return list(percep[ClauPercepcio.POSICIO].keys())[0]
+
     def actua(
             self, percep: entorn.Percepcio
     ) -> entorn.Accio | tuple[entorn.Accio, object]:
-
         if self.__accions is None:
             self._genetic(percep)
 
